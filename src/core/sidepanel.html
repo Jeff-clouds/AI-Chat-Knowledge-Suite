@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        /* CSS 变量 - 双主题支持 */
+        :root {
+            /* 默认深色主题 */
+            --bg-primary: #1e1e1e;
+            --bg-secondary: #2d2d2d;
+            --bg-tertiary: #3d3d3d;
+            --text-primary: #ececf1;
+            --text-secondary: #d1d5db;
+            --text-tertiary: #9ca3af;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --border-color: #3e3e3e;
+            --hover-bg: #2d2d2d;
+            --shadow: rgba(0, 0, 0, 0.3);
+            /* ChatGPT 风格变量 */
+            --bg-item: #2d2d2d;
+            --bg-item-hover: rgba(255, 255, 255, 0.05);
+            --bg-item-active: rgba(255, 255, 255, 0.08);
+            --bg-question: #2d2d2d;
+            --bg-item-border: #444444;  /* 新增：可见边框 */
+            --text-question: #ececf1;
+            --border-active: var(--accent-blue);
+            --indent-unit: 12px;  /* 从 16px 减少到 12px */
+        }
+
+        /* 浅色主题 */
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg-primary: #ffffff;
+                --bg-secondary: #f9fafb;
+                --bg-tertiary: #f3f4f6;
+                --text-primary: #111827;
+                --text-secondary: #374151;
+                --text-tertiary: #6b7280;
+                --accent-blue: #2563eb;
+                --accent-green: #059669;
+                --border-color: #e5e7eb;
+                --hover-bg: #f3f4f6;
+                --shadow: rgba(0, 0, 0, 0.1);
+                /* ChatGPT 风格变量 */
+                --bg-item: #f0f1f3;  /* 从 #f9fafb 增强对比度 */
+                --bg-item-hover: rgba(0, 0, 0, 0.04);
+                --bg-item-active: rgba(0, 0, 0, 0.06);
+                --bg-question: #e8eaed;  /* 从 #f9fafb 增强对比度 */
+                --bg-item-border: #dde0e4;  /* 新增：可见边框 */
+                --text-question: #111827;
+                --border-active: var(--accent-blue);
+                --indent-unit: 12px;  /* 从 16px 减少到 12px */
+            }
+        }
+
+        body {
+            font-family: 'Söhne', 'Segoe UI', 'Apple Color Emoji', 'Noto Sans', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 16px;
+            padding-bottom: 60px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        #site-info {
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        #suite-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        #export-full-chat {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--accent-blue);
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1;
+            padding: 11px 12px;
+            transition: filter 0.15s ease, opacity 0.15s ease;
+        }
+
+        #export-full-chat:hover {
+            filter: brightness(1.08);
+        }
+
+        #export-full-chat:disabled {
+            cursor: not-allowed;
+            opacity: 0.65;
+        }
+
+        #export-status {
+            min-height: 16px;
+            color: var(--text-tertiary);
+            font-size: 12px;
+            line-height: 1.35;
+        }
+
+        #export-status[data-tone="success"] {
+            color: var(--accent-green);
+        }
+
+        #export-status[data-tone="error"] {
+            color: #ef4444;
+        }
+
+        /* 一键操作按钮样式 */
+        #toggle-all-container {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            text-align: center;
+        }
+
+        #toggle-all-btn {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #toggle-all-btn:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--text-tertiary);
+        }
+
+        #toggle-all-btn:active {
+            background: var(--bg-secondary);
+        }
+
+        #toggle-all-btn .icon {
+            font-size: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        #toggle-all-btn.collapsed .icon {
+            transform: rotate(-90deg);
+        }
+
+        .outline-item {
+            cursor: pointer;
+            padding: 17px 12px;  /* 从 11px 增加 50% */
+            margin: 3px 0;  /* 从 2px 增加间距 */
+            border-radius: 6px;
+            transition: background-color 0.15s ease, color 0.15s ease;
+            color: var(--text-secondary);
+            position: relative;
+            background-color: var(--bg-item);
+            border: 1px solid var(--bg-item-border);  /* 添加边框 */
+            display: flex;
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;  /* 防止文本溢出 */
+            /* 移除 justify-content: flex-end */
+            /* 移除 border-left: 3px solid transparent */
+        }
+
+        .outline-item:hover {
+            background-color: var(--bg-item-hover);
+        }
+
+        .outline-item.question {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            color: var(--text-primary);
+            background-color: var(--bg-question);
+            padding: 21px 12px;  /* 恢复原来的 padding */
+            margin-top: 8px;
+            margin-bottom: 0;
+            border-radius: 8px;
+            width: 100%;
+            border: 1px solid var(--bg-item-border);
+        }
+
+        .outline-item.question:first-child {
+            margin-top: 0;
+        }
+
+        .outline-item.question:hover {
+            background-color: var(--bg-item-hover);
+        }
+
+        .outline-item.answer {
+            color: var(--text-secondary);
+            font-weight: 400;
+            font-size: 13px;
+            padding: 12px 12px;
+        }
+
+        /* 展开/收起图标 - CSS 绘制 */
+        .toggle-icon {
+            width: 16px;
+            height: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;  /* 从 6px 增加 */
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: transform 0.2s ease;
+        }
+
+        .toggle-icon::before {
+            content: '';
+            width: 0;
+            height: 0;
+            border-left: 6px solid var(--text-tertiary);  /* 从 4px 增加 */
+            border-top: 5px solid transparent;  /* 从 3.5px 增加 */
+            border-bottom: 5px solid transparent;  /* 从 3.5px 增加 */
+            transition: transform 0.2s ease, border-color 0.15s ease;
+        }
+
+        .toggle-icon:hover::before {
+            border-left-color: var(--text-primary);
+        }
+
+        .toggle-icon.expanded {
+            transform: rotate(0deg);
+        }
+
+        .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .answers-container {
+            overflow: hidden;
+            opacity: 1;
+            transition: height 0.3s ease-in-out, opacity 0.2s ease;
+        }
+
+        .answers-container.collapsing {
+            height: 0 !important;  /* 使用 !important 确保覆盖内联样式 */
+            opacity: 0;
+        }
+
+        /* 层级缩进 - 使用 margin-left 实现整体缩进（背景+边框一起移动） */
+        /* 使用 width: calc(100% - margin-left) 防止溢出 */
+        .h1.outline-item {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        .h2.outline-item {
+            margin-left: var(--indent-unit);
+            width: calc(100% - var(--indent-unit));
+        }
+
+        .h3.outline-item {
+            margin-left: calc(var(--indent-unit) * 2);
+            width: calc(100% - var(--indent-unit) * 2);
+        }
+
+        .h4.outline-item {
+            margin-left: calc(var(--indent-unit) * 3);
+            width: calc(100% - var(--indent-unit) * 3);
+        }
+
+        .h5.outline-item {
+            margin-left: calc(var(--indent-unit) * 4);
+            width: calc(100% - var(--indent-unit) * 4);
+        }
+
+        .h6.outline-item {
+            margin-left: calc(var(--indent-unit) * 5);
+            width: calc(100% - var(--indent-unit) * 5);
+        }
+
+        /* 问题项目始终左对齐（放在缩进规则之后，确保优先级） */
+        .outline-item.question {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        /* 问题组分隔样式 */
+        .question-group {
+            margin-bottom: 6px;  /* 从 4px 增加 */
+        }
+
+        .question-group + .question-group {
+            margin-top: 6px;  /* 从 4px 增加 */
+            padding-top: 6px;  /* 从 4px 增加 */
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 强调指示器 - 伪元素，不影响布局 */
+        .outline-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 4px;
+            bottom: 4px;
+            width: 3px;
+            border-radius: 0 2px 2px 0;
+            background-color: transparent;
+            transition: background-color 0.15s ease;
+        }
+
+        /* 当前阅读位置高亮 */
+        .outline-item.current-reading {
+            background-color: var(--bg-item-active);
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .outline-item.current-reading::before {
+            background-color: var(--border-active);
+        }
+
+        /* 阅读进度指示器 */
+        #reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-blue));
+            transition: width 0.3s ease;
+            z-index: 1000;
+        }
+
+        /* 平滑滚动 */
+        .outline-item {
+            scroll-behavior: smooth;
+        }
+
+        /* 响应式 - 中等面板 */
+        @media (max-width: 350px) {
+            :root { --indent-unit: 10px; }
+        }
+
+        /* 响应式 - 极窄面板 */
+        @media (max-width: 280px) {
+            :root { --indent-unit: 8px; }
+
+            .outline-item {
+                padding: 14px 10px;
+            }
+
+            .outline-item.question {
+                padding: 18px 10px;
+            }
+
+            .outline-item.answer {
+                padding: 10px 10px;
+            }
+        }
+
+        /* 错误消息样式 */
+        .error-message {
+            padding: 20px;
+            color: var(--text-tertiary);
+        }
+
+        .error-message h3 {
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .error-message a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        .error-message a:hover {
+            text-decoration: underline;
+        }
+
+        .diagnostic-info {
+            margin-top: 20px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+        }
+
+        .diagnostic-details summary {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            cursor: pointer;
+        }
+
+        .diagnostic-content {
+            margin-top: 10px;
+            background: var(--bg-secondary);
+            padding: 10px;
+            border-radius: 6px;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 11px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            color: var(--text-tertiary);
+        }
+
+        /* 加载状态 */
+        .loading-state {
+            padding: 20px;
+            text-align: center;
+            color: var(--text-tertiary);
+        }
+    </style>
+</head>
+<body>
+    <div id="site-info"></div>
+    <div id="suite-actions">
+        <button id="export-full-chat">导出完整对话</button>
+        <div id="export-status" aria-live="polite"></div>
+    </div>
+    <div id="outline"></div>
+    <div id="toggle-all-container">
+        <button id="toggle-all-btn">
+            <span class="icon">▼</span>
+            <span class="text">收起所有</span>
+        </button>
+    </div>
+    <script src="sidepanel.js"></script>
+</body>
+</html>

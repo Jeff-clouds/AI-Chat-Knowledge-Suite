@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build output
+dist/
+build/
+unused/
+scripts废弃/
+.trae/
+.qoder/
+.lingma/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.py
+
+# Chrome Extension specific
+*.pem
+*.crx
+*.zip
+web-ext-artifacts/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
