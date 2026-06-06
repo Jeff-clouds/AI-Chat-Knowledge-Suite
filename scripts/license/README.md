@@ -21,6 +21,21 @@ node scripts/license/generate-license.mjs --email=user@example.com --order=order
 
 The generated license includes `licenseId`, `orderId`, `emailHash`, `plan`, `features`, and `issuedAt`.
 
+## Issue a manual paid license
+
+Use this after confirming a paid order in Lemon Squeezy, Gumroad, WeChat, Alipay, or another payment channel.
+
+```bash
+node scripts/license/issue-manual-license.mjs \
+  --email=user@example.com \
+  --order=lemonsqueezy_order_001 \
+  --channel=lemonsqueezy \
+  --amount=69
+```
+
+This prints the license code and appends a private record to `license-orders.jsonl`.
+The ledger is ignored by git and should be backed up separately.
+
 ## Verify a license locally
 
 ```bash
